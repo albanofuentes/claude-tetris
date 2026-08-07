@@ -55,6 +55,9 @@ jobs:
                  index.html / style.css según corresponda), citando el archivo y la función.
                - Una sugerencia de enfoque de solución a alto nivel, sin escribir el código todavía,
                  ya que esta información se usará después para implementar la solución.
+               El comentario debe estar redactado en formato Markdown válido y bien estructurado
+               (encabezados, listas, bloques de código con ```` ``` ```` para nombres de archivo/función,
+               etc.) para que GitHub lo renderice correctamente.
 
             No modifiques ningún archivo del repositorio en este workflow; tu única salida son el
             label y el comentario en el issue.
