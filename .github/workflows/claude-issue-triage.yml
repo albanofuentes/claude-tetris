@@ -1,0 +1,60 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Issue Triage
+        id: claude-triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --allowed-tools "Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(gh issue view:*)"
+          prompt: |
+            Estás analizando el issue #${{ github.event.issue.number }} de este repositorio de Tetris.
+
+            Contexto del proyecto: lee CLAUDE.md en la raíz del repo para entender la arquitectura
+            (index.html, style.css, game.js) antes de diagnosticar.
+
+            Pasos a seguir:
+
+            1. Lee el título y el cuerpo del issue con:
+               gh issue view ${{ github.event.issue.number }} --json title,body,labels
+
+            2. Consulta los labels disponibles en el repo con:
+               gh label list
+               Solo puedes usar labels que ya existan en esa lista. No crees labels nuevos.
+
+            3. Elige los labels más apropiados según el contenido del issue (por ejemplo bug,
+               enhancement, documentation, question, duplicate, invalid, wontfix, help wanted,
+               good first issue) y aplícalos con:
+               gh issue edit ${{ github.event.issue.number }} --add-label "label1,label2"
+               No elimines labels que ya estén asignados salvo que sean claramente incorrectos.
+
+            4. Publica un comentario en el issue con un diagnóstico general del problema, usando:
+               gh issue comment ${{ github.event.issue.number }} --body "..."
+               El comentario debe incluir:
+               - Un resumen breve del problema o solicitud.
+               - Una hipótesis de causa raíz o de qué requiere la funcionalidad pedida.
+               - Las partes del código probablemente involucradas (funciones de game.js como
+                 loop(), lockPiece(), clearLines(), tryRotate(), ghostY(), etc., o los archivos
+                 index.html / style.css según corresponda), citando el archivo y la función.
+               - Una sugerencia de enfoque de solución a alto nivel, sin escribir el código todavía,
+                 ya que esta información se usará después para implementar la solución.
+
+            No modifiques ningún archivo del repositorio en este workflow; tu única salida son el
+            label y el comentario en el issue.
